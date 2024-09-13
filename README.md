@@ -2,35 +2,39 @@
 
 A declarative system configurator. Think NixOS/Guix, but with the ability to opt out after your initial install.
 
+## Example config
+
+```c
+// config.c
+static void laptops_configure(Config* c) {
+    config_add_package(str("acpi"), c);
+}
+
+static void framework_configure(Config* c) {
+    config_set_hostname(str("fwork"), c);
+}
+
+static void configure(Config* c) {
+    config_add_package(str("neovim"), c);
+
+    config_register_named_layer(str("laptops"), laptops_configure, c);
+    config_register_named_layer(str("framework"), framework_configure, c);
+}
+```
+
 ## How do I use it?
 
 ```sh
-# subject to change
-curl -O https://raw.githubusercontent.com/AlaskaOS/Alaska/master/alaska.zig
-zig run alaska.zig -- sync # sync system to config.zig specification
-```
-
-## Example config
-
-```zig
-// config.zig
-pub fn configure(c: *@import("alaska.zig").Config) void {
-    c.hostname = "myhostname";
-
-    const global_packages = .{
-        "busybox",
-        "neovim",
-        "fish",
-    };
-    inline for (global_packages) |package|
-        c.addPackage(.{ .name = package });
-}
+# create your config.c, then...
+curl -O https://raw.githubusercontent.com/AlaskaOS/Alaska/master/alaska.c
+cc -o alaska alaska.c
+alaska sync laptops framework # or whatever your layer names are beyond 'default'
 ```
 
 ## Goals
 
 - Be completely transparent to the configured system. Deletable without hassle.
-- Be extensible with the full power of Zig.
+- Be extensible with the full power of a turing-complete language.
 - Allow multiple hardware configurations in a single config file.
 - The following assumptions are currently being made for simplicity:
     - x86_64 Linux kernel
