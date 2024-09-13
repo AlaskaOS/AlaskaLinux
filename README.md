@@ -4,35 +4,44 @@ A declarative system configurator. Think NixOS/Guix, but with the ability to opt
 
 ## Example config
 
-```c
-// config.c
-static void laptops_configure(Config* c) {
-    config_add_package(str("acpi"), c);
-}
+```zig
+// config.zig
+const alaska = @import("alaska.zig");
 
-static void framework_configure(Config* c) {
-    config_set_hostname(str("fwork"), c);
-}
+const Laptops = struct {
+    pub fn configure(c: *alaska.Config) void {
+        c.addPackage(.{ .name = "acpi" });
+    }
+};
 
-static void configure(Config* c) {
-    config_add_package(str("neovim"), c);
+const Framework = struct {
+    pub fn configure(c: *alaska.Config) void {
+        c.hostname = "fwork";
+    }
+};
 
-    config_register_named_layer(str("laptops"), laptops_configure, c);
-    config_register_named_layer(str("framework"), framework_configure, c);
+pub fn configure(c: *alaska.Config) void {
+    c.addPackage(.{ .name = "busybox" });
+    c.addPackage(.{ .name = "neovim" });
+
+    c.registerLayer("laptops", Laptops);
+    c.registerLayer("framework", Framework);
 }
 ```
 
 ## How do I use it?
 
 ```sh
-# create your config.c, then...
-curl -O https://raw.githubusercontent.com/AlaskaOS/Alaska/master/alaska.c
-cc -o alaska alaska.c
-alaska sync laptops framework # or whatever your layer names are beyond 'default'
+# create your config.zig, then...
+curl -O https://raw.githubusercontent.com/AlaskaOS/AlaskaLinux/master/alaska.zig
+zig run alaska.zig -- show laptops framework
+# if everything looks correct, then...
+zig run alaska.zig -- sync laptops framework
 ```
 
 ## Goals
 
+- Be less than 1000 SLOC.
 - Be completely transparent to the configured system. Deletable without hassle.
 - Be extensible with the full power of a turing-complete language.
 - Allow multiple hardware configurations in a single config file.
